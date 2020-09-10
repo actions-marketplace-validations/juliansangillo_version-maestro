@@ -1,0 +1,45 @@
+#! /bin/bash
+
+#get-major-revision
+#by Julian Sangillo
+#Returns the major revision from a provided version and its revision pattern.
+
+VERSION="$1";
+REVISION_PATTERN="$2";
+
+if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
+	log "Could not get major revision! The version '$VERSION' is invalid.";
+	exit 1
+fi
+
+if ! [[ "$REVISION_PATTERN" =~ ^[Mmbp](\.[Mmbp])*$ ]]; then
+	log "Could not get major revision! The revision pattern '$REVISION_PATTERN' is invalid.";
+	exit 16
+fi
+
+getMajorRevision() {
+	log "Getting major revision ...";
+	
+	local version=($(split . $VERSION));
+	local pattern=($(split . $REVISION_PATTERN));
+	
+	if [ ${#version[@]} -ne ${#pattern[@]} ]; then
+		log "Could not get major revision! The version '$VERSION' must be the same length as the revision pattern '$REVISION_PATTERN'.";
+		exit 32
+	fi
+	
+	local max=$((${#version[@]}-1));
+	for ((i=0 ; i<=$max ; i++));
+	do
+		local revision=${version[i]};
+		local type=${pattern[i]};
+		
+		if [ "$type" = "M" ]; then
+			echo $revision;
+			break;
+		fi
+	done
+}
+
+echo "$(getMajorRevision)";
+exit 0

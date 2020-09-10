@@ -1,0 +1,19 @@
+#! /bin/bash
+
+#get-latest-changes
+#by Julian Sangillo
+#Gets a newline separated list of the commit messages from HEAD up to the latest version.
+
+ LATEST_VERSION="$1";
+ 
+ if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
+	log "Could not get latest changes! The version '$LATEST_VERSION' is invalid.";
+	exit 1
+fi
+
+getLatestChanges() {
+	local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
+}
+
+echo "$(getLatestChanges)";
+exit 0
