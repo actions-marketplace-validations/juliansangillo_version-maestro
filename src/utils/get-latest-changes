@@ -11,8 +11,37 @@
 	exit 1
 fi
 
+CHANGE_TYPES=('feat' 'fix' 'docs' 'style' 'refactor' 'perf' 'test' 'chore' 'build' 'patch' 'BREAKING CHANGE');
+
+getChangeType() {
+	local commit="$1";
+
+	local message="$(git show -s --format=%s $commit)";
+	local regex='^([a-zA-Z ]+)(\(.*\))?:.*$';
+
+	echo $message | grep -P "$regex" | sed -r "s/$regex/\1/g"
+}
+
 getLatestChanges() {
+	log "Getting latest changes ...";
+
 	local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
+	
+	local changes=();
+	while read -r commit; do
+		local date="$(git show -s --format=%ad --date=short $commit)";
+		local author="$(git show -s --format="%an [%ae]" $commit)";
+		local message="$(git show -s --format=%s $commit | sed 's/^\([A-Z]\+'-'[0-9]\+\)\?//g' | sed 's/\(#major\|#minor\)\?//g' | sed 's/  / /g' | sed -e 's/^ *//' -e 's/ *$//')";
+		
+		local change_type=$(getChangeType $commit);
+
+		if [[ " ${CHANGE_TYPES[@]} " == *" $change_type "* ]]; then
+			log "$date $message | $author";
+			local changes+=("- **$date** $message | ***$author***");
+		fi
+	done <<< "$history"
+	
+	IFS='\n' && echo "${changes[@]}" && IFS=$' \t\n'
 }
 
 echo "$(getLatestChanges)";
