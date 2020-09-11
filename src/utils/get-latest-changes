@@ -6,9 +6,14 @@
 
  LATEST_VERSION="$1";
  
+ if [ "$#" -ne 1 ]; then
+	log "Illegal number of arguments.";
+	exit 1
+fi
+ 
  if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
 	log "Could not get latest changes! The version '$LATEST_VERSION' is invalid.";
-	exit 1
+	exit 16
 fi
 
 CHANGE_TYPES=('feat' 'fix' 'docs' 'style' 'refactor' 'perf' 'test' 'chore' 'build' 'patch' 'BREAKING CHANGE');
@@ -41,7 +46,8 @@ getLatestChanges() {
 		fi
 	done <<< "$history"
 	
-	IFS='\n' && echo "${changes[@]}" && IFS=$' \t\n'
+	local IFS=$'\n';
+	echo "${changes[*]}"
 }
 
 echo "$(getLatestChanges)";

@@ -1,0 +1,18 @@
+ #! /bin/bash
+ 
+ #commit
+ #by Julian Sangillo
+ #Add and commit a new change to git provided the path to the change and commit message.
+ 
+ CHANGE="$1";
+ MESSAGE="$2";
+ 
+ if [ "$#" -ne 2 ]; then
+	log "Illegal number of arguments.";
+	exit 1
+fi
+
+git add $CHANGE || exit $?;
+git commit -m "$MESSAGE" || exit $?;
+
+exit 0

@@ -7,14 +7,19 @@
 VERSION="$1";
 REVISION_PATTERN="$2";
 
+if [ "$#" -ne 2 ]; then
+	log "Illegal number of arguments.";
+	exit 1
+fi
+
 if ! [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
 	log "Could not get major revision! The version '$VERSION' is invalid.";
-	exit 1
+	exit 16
 fi
 
 if ! [[ "$REVISION_PATTERN" =~ ^[Mmbp](\.[Mmbp])*$ ]]; then
 	log "Could not get major revision! The revision pattern '$REVISION_PATTERN' is invalid.";
-	exit 16
+	exit 32
 fi
 
 getMajorRevision() {
@@ -25,7 +30,7 @@ getMajorRevision() {
 	
 	if [ ${#version[@]} -ne ${#pattern[@]} ]; then
 		log "Could not get major revision! The version '$VERSION' must be the same length as the revision pattern '$REVISION_PATTERN'.";
-		exit 32
+		exit 48
 	fi
 	
 	local max=$((${#version[@]}-1));

@@ -1,0 +1,17 @@
+#! /bin/bash
+
+#push-to-origin
+#by Julian Sangillo
+#Git push all local commits and tags to repository.
+
+pushToOrigin() {
+	log "Pushing to origin ...";
+	
+	git push;
+	git push --tags;
+	
+	log "Push successful"
+ }
+
+pushToOrigin;
+exit 0
