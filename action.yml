@@ -1,0 +1,35 @@
+name: Version Maestro
+author: Julian Sangillo
+description: Orchestrates versioning new commits given a version id and maintains the CHANGELOG
+inputs:
+  version:
+    description: Version ID to use. Must be a period separated string of numbers and a release tag.
+    required: true
+  revision-pattern:
+    description: Custom pattern showing version structure.
+    required: false
+    default: M.m.b
+  preferred-type:
+    description: The preferred revision type to fallback to if no other type can be determined. Possible values are 'build' or 'patch'
+    required: false
+    default: build
+runs:
+  using: composite
+  steps:
+    - run: |
+        if [ -z "${{ inputs.version }}" ]; then
+          echo "::error file=action.yml,line=5::inputs.version is required";
+          exit 1
+        fi
+      shell: bash
+
+    - run: |
+        echo "::add-path::$GITHUB_ACTION_PATH/${{ env.SRC }}";
+        echo "::add-path::$GITHUB_ACTION_PATH/${{ env.SRC_UTILS }}"
+      env:
+        SRC: src
+        SRC_UTILS: src/utils
+      shell: bash
+
+      - run: version-maestro ${{ inputs.version }} ${{ inputs.revision-pattern }} ${{ inputs.preferred-type }}
+        shell: bash

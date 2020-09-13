@@ -2,7 +2,7 @@
 
 #version-maestro
 #by Julian Sangillo
-#Tag the new commits for release using a given version id and maintain the CHANGELOG.
+#Orchestrates versioning new commits given a version id and maintains the CHANGELOG.
 
 VERSION="$1";
 REVISION_PATTERN="$2";
