@@ -2,18 +2,49 @@
 
 #get-latest-changes
 #by Julian Sangillo
-#Gets a newline separated list of the commit messages from HEAD up to the latest version.
+#Gets a newline separated, markdown formatted list of the commit messages from HEAD down to the latest version.
 
- LATEST_VERSION="$1";
+showHelp() {
+	echo "Usage: get-latest-changes [options...] [args...]";
+	echo "Gets a newline separated, markdown formatted list of the commit messages from";
+	echo "HEAD down to the latest version. If no version is specified, it will get the changes HEAD";
+	echo "down to the initial commit.";
+	echo "	";
+	echo "Options: ";
+	echo "	-v	Enter a released version and pull the latest changes from HEAD down";
+	echo "		to that version. The latest-version must not be empty and must be a";
+	echo "		period separated string of numbers and may have one release tag of";
+	echo "		letters appended to the end";
+	echo "		Usage: get-latest-changes -v <latest-version>";
+} >&2
+
+while getopts ":v:" opt; do
+	case "${opt}" in
+		v) 
+			LATEST_VERSION=$OPTARG
+			
+			if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
+				log "Could not get latest changes! The version '$LATEST_VERSION' is invalid.";
+				echo "	" >&2;
+				showHelp;
+				exit 16
+			fi
+			;;
+		*)
+			log "Could not get latest changes! Unknown option '-${opt}'";
+			echo "	" >&2;
+			showHelp;
+			exit 1
+			;;
+	esac
+done
+shift $((OPTIND-1));
  
- if [ "$#" -ne 1 ]; then
+ if [ "$#" -ne 0 ]; then
 	log "Illegal number of arguments.";
+	echo "	" >&2;
+	showHelp;
 	exit 1
-fi
- 
- if ! [[ "$LATEST_VERSION" =~ ^[0-9]+(\.[0-9]+)*(\.[A-Za-z]+)?$ ]]; then
-	log "Could not get latest changes! The version '$LATEST_VERSION' is invalid.";
-	exit 16
 fi
 
 CHANGE_TYPES=('feat' 'fix' 'docs' 'style' 'refactor' 'perf' 'test' 'chore' 'build' 'patch' 'BREAKING CHANGE');
@@ -30,19 +61,29 @@ getChangeType() {
 getLatestChanges() {
 	log "Getting latest changes ...";
 
-	local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
+	if [ ! -z "$LATEST_VERSION" ]; then
+		local history="$(git rev-list --ancestry-path HEAD ^v$LATEST_VERSION)";
+	else
+		local history="$(git rev-list --all | head -n -1)";
+	fi
 	
+	if [ -z "$history" ]; then
+		log "No new history. Skipping";
+		return;
+	fi
+
 	local changes=();
 	while read -r commit; do
 		local date="$(git show -s --format=%ad --date=short $commit)";
-		local author="$(git show -s --format="%an [%ae]" $commit)";
+		local author_name="$(git show -s --format="%an" $commit)";
+		local author_email="$(git show -s --format="%ae" $commit)";
 		local message="$(git show -s --format=%s $commit | sed 's/^\([A-Z]\+'-'[0-9]\+\)\?//g' | sed 's/\(#major\|#minor\)\?//g' | sed 's/  / /g' | sed -e 's/^ *//' -e 's/ *$//')";
 		
 		local change_type=$(getChangeType $commit);
 
 		if [[ " ${CHANGE_TYPES[@]} " == *" $change_type "* ]]; then
-			log "$date $message | $author";
-			local changes+=("- **$date** $message | ***$author***");
+			log "$date $message | $author_name <$author_email>";
+			local changes+=("+ **$date** $message | ***$author_name*** *<[$author_email](mailto:$author_email)>*");
 		fi
 	done <<< "$history"
 	

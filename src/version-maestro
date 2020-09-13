@@ -1,0 +1,59 @@
+#! /bin/bash
+
+#version-maestro
+#by Julian Sangillo
+#Tag the new commits for release using a given version id and maintain the CHANGELOG.
+
+VERSION="$1";
+REVISION_PATTERN="$2";
+PREFERRED_TYPE="$3";
+
+if [ "$#" -ne 3 ]; then
+	log "Illegal number of arguments.";
+	exit 1
+fi
+
+cat resources/ascii-title.txt >&2;
+
+log "Starting ...";
+
+initialize-git;
+
+CHANGELOG='./CHANGELOG.md';
+
+RAW_VERSION="$(strip-release-tag $VERSION)";
+LATEST_VERSION="$(get-latest-version)";
+if [ ! -z "$LATEST_VERSION" ]; then
+	RAW_LATEST_VERSION="$(strip-release-tag $LATEST_VERSION)";
+
+	if [ "$RAW_VERSION" != "$RAW_LATEST_VERSION" ]; then
+		LATEST_CHANGES="$(get-latest-changes -v $LATEST_VERSION)";
+	else
+		LATEST_CHANGES="$(echo -e "$(get-latest-changes -v $LATEST_VERSION)\n$(git tag -n99 v$LATEST_VERSION | tail -n +2 | sed 's/^    //g')" | awk NF)";
+	fi
+
+	if [ -f $CHANGELOG ]; then
+		REVISION_TYPE="$(grep "^\[//\]: # (V:$RAW_VERSION T:.*)$" $CHANGELOG | grep -o "T:.*)" | tr -d "T:)")";
+	fi
+
+	if [ -z $REVISION_TYPE ]; then
+		REVISION_TYPE="$(get-revision-type $LATEST_VERSION $PREFERRED_TYPE)";
+		MAJOR_REVISION="$(get-major-revision $VERSION $REVISION_PATTERN)";
+
+		push-to-changelog "$LATEST_CHANGES" $MAJOR_REVISION $RAW_VERSION $REVISION_TYPE $CHANGELOG;
+	fi
+else
+	LATEST_CHANGES="$(get-latest-changes)";
+	REVISION_TYPE='major';
+	MAJOR_REVISION="$(get-major-revision $VERSION $REVISION_PATTERN)";
+	push-to-changelog "$LATEST_CHANGES" $MAJOR_REVISION $RAW_VERSION $REVISION_TYPE $CHANGELOG;
+fi
+
+ANNOTATION="$(echo -e "${REVISION_TYPE^^} $VERSION \n$LATEST_CHANGES")";
+git tag -a -f v$VERSION -m "$ANNOTATION";
+
+push-to-origin;
+
+log "Success!";
+
+exit 0

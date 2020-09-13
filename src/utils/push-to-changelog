@@ -1,42 +1,42 @@
 #! /bin/bash
 
-#push-to-changelog
+#push-to-CHANGELOG
 #by Julian Sangillo
-#Append the latest changes to the top of the current changelog (based on major revision) and sectioned of by full version.
+#Append the latest changes to the top of the current CHANGELOG (based on major revision) and sectioned of by full version.
 
 LATEST_CHANGES="$1";
 MAJOR_REVISION="$2";
 FULL_VERSION="$3";
 REVISION_TYPE="$4";
+CHANGELOG="$5";
 
-if [ "$#" -ne 4 ]; then
+if [ "$#" -ne 5 ]; then
 	log "Illegal number of arguments.";
 	exit 1
 fi
 
 if ! [[ "$FULL_VERSION" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
-	log "Could not push to changelog! The version '$FULL_VERSION' is invalid.";
+	log "Could not push to CHANGELOG! The version '$FULL_VERSION' is invalid.";
 	exit 16
 fi
 
 if [[ " major minor build patch " != *" ${REVISION_TYPE,,} "* ]]; then
-	log "Could not push to changelog! The revision type must be one of the following: major, minor, build, or patch.";
+	log "Could not push to CHANGELOG! The revision type must be one of the following: major, minor, build, or patch.";
 	exit 32
 fi
 
 pushToChangelog() {
 	log "Pushing to CHANGELOG ...";
 	
-	local changelog="./CHANGELOG.md";
-	local temp="/tmp/changelog.tmp";
+	local temp="/tmp/CHANGELOG.tmp";
 	
 	log "Major Revision: $MAJOR_REVISION";
 	log "Full Version: $FULL_VERSION";
 	log "Revision Type: $REVISION_TYPE";
-	log "CHANGELOG File: $changelog";
-	log "Total Changes: $(echo $LATEST_CHANGES | wc -l)";
+	log "CHANGELOG File: $CHANGELOG";
+	log "Total Changes: $(echo "$LATEST_CHANGES" | awk NF | wc -l)";
 	
-	if [ -z $LATEST_CHANGES ]; then
+	if [ -z "$LATEST_CHANGES" ]; then
 		log "No changes to push. Skipping";
 		return;
 	fi
@@ -44,20 +44,21 @@ pushToChangelog() {
 	log "Logging changes";
 	
 	echo "# CHANGELOG<br>$MAJOR_REVISION" > $temp;
+	echo "[//]: # (V:$FULL_VERSION T:${REVISION_TYPE,,})" >> $temp;
 	echo "### $FULL_VERSION" >> $temp;
 	echo "$LATEST_CHANGES" >> $temp;
 	
 	log "Changes logged";
 	
-	if [ "${REVISION_TYPE,,}" != "major" ] && [ -f $changelog ]; then
-		tail -n +2 $changelog >> $temp;
+	if [ "${REVISION_TYPE,,}" != "major" ] && [ -f $CHANGELOG ]; then
+		tail -n +2 $CHANGELOG >> $temp;
 	fi
 	
-	mv -f $temp $changelog;
+	mv -f $temp $CHANGELOG;
 	
-	commit $changelog "${REVISION_TYPE^^} $FULL_VERSION Update CHANGELOG.md" || exit $?;
+	commit $CHANGELOG "${REVISION_TYPE^^} $FULL_VERSION Update CHANGELOG.md" || exit $?;
 	
-	log "Success"
+	log "Changes successfully logged"
 }
 
 pushToChangelog;
