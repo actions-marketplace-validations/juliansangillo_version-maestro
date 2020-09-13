@@ -110,3 +110,5 @@ jobs:
           revision-pattern: M.m.b.p
           preferred-type: patch
 ```
+## See Also
+[juliansangillo/version-composer](https://github.com/juliansangillo/version-composer)
