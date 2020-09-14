@@ -1,6 +1,8 @@
 name: Version Maestro
 author: Julian Sangillo
 description: Orchestrates versioning new commits given a version id and maintains the CHANGELOG
+branding:
+  icon: package
 inputs:
   version:
     description: Version ID to use. Must be a period separated string of numbers and a release tag.
