@@ -111,4 +111,4 @@ jobs:
           preferred-type: patch
 ```
 ## See Also
-[juliansangillo/version-composer](https://github.com/juliansangillo/version-composer)
+[juliansangillo/version-composer](https://github.com/marketplace/actions/version-composer)
