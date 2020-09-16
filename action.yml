@@ -19,12 +19,12 @@ inputs:
 runs:
   using: composite
   steps:
-    - run: |
-        if [ -z "${{ inputs.version }}" ]; then
-          echo "::error file=action.yml,line=5::inputs.version is required";
-          exit 1
-        fi
-      shell: bash
+    #- run: |
+    #    if [ -z "${{ inputs.version }}" ]; then
+    #      echo "::error file=action.yml,line=5::inputs.version is required";
+    #      exit 1
+    #    fi
+    #  shell: bash
 
     - run: |
         echo "::add-path::$GITHUB_ACTION_PATH/${{ env.SRC }}";
